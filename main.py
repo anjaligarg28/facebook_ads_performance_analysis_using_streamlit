@@ -4,6 +4,9 @@ import streamlit as st
 
 from utils.dashboard import design_sidebar
 
+st.cache_data.clear()
+st.cache_resource.clear()
+
 st.set_page_config(
     page_title="Road Accident Data Dashboard",
     page_icon=":chart_with_upwards_trend:",

@@ -17,13 +17,13 @@ def preprocess(data: pd.DataFrame):
     data["Accident_Severity"] = data["Accident_Severity"].str.replace("Fetal", "Fatal")
 
     # replacing null value in road surface condition column to Not Available
-    data["Road_Surface_Conditions"].fillna("Not Available", inplace=True)
+    data["Road_Surface_Conditions"] = data["Road_Surface_Conditions"].fillna("Not Available")
 
     # replacing null value in road type column to Not Available
-    data["Road_Type"].fillna("Not Available", inplace=True)
+    data["Road_Type"] = data["Road_Type"].fillna("Not Available")
 
     # replacing null value in weather conditions column to Not Available
-    data["Weather_Conditions"].fillna("Not Available", inplace=True)
+    data["Weather_Conditions"] = data["Weather_Conditions"].fillna("Not Available")
 
     # Light_Conditions
     # ['Daylight' 'Darkness - lights lit' 'Darkness - lighting unknown'

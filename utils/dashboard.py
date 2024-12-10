@@ -15,8 +15,8 @@ def design_sidebar(data: pd.DataFrame):
     selected_start_date = st.sidebar.date_input("Select Start Date", value=min_date, key=f"startdate{id}")
     selected_end_date = st.sidebar.date_input("Select End Date", value=max_date, key=f"enddate{id}")
 
-    t1 = pd.to_datetime(str(selected_start_date.day) + "-" + str(selected_start_date.month) + "-" + str(selected_start_date.year))
-    t2 = pd.to_datetime(str(selected_end_date.day) + "-" + str(selected_end_date.month) + "-" + str(selected_end_date.year))
+    t1 = pd.to_datetime((str(selected_start_date.day) + "-" + str(selected_start_date.month) + "-" + str(selected_start_date.year)), dayfirst=True)
+    t2 = pd.to_datetime((str(selected_end_date.day) + "-" + str(selected_end_date.month) + "-" + str(selected_end_date.year)), dayfirst=True)
 
     data = data[(data["Accident Date"] >= t1) & (data["Accident Date"] <= t2)]
 

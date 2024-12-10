@@ -58,7 +58,7 @@ def design_sidebar(data: pd.DataFrame):
 
     design_dashboard(preprocessed_data)
 
-def design_dashboard(data):
+def display_initial_metrics(data):
 
     # Create columns
     col1, col2, col3 = st.columns(3)
@@ -83,3 +83,6 @@ def design_dashboard(data):
     with col6.container(border=True):
         st.metric("Fatal Cases", f"{data[data["Accident_Severity"] == "Fatal"]["Accident_Index"].nunique():,}")
 
+def design_dashboard(data):
+
+    display_initial_metrics(data)

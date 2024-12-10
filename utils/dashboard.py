@@ -1,11 +1,12 @@
 import streamlit as st
 import pandas as pd
+import emoji
 
 from utils.analyse_and_clean import preprocess
 
 def design_sidebar(data: pd.DataFrame):
     # how the dashboard will look like
-    st.sidebar.title("Caustomize your dashboard based on your requirement.")
+    st.write(emoji.emojize("## :arrow_left: Filter the entire data based on your requirement."))
 
     data["Accident Date"] = pd.to_datetime(data["Accident Date"])
     min_date = data["Accident Date"].min()
@@ -82,6 +83,23 @@ def display_initial_metrics(data):
 
     with col6.container(border=True):
         st.metric("Fatal Cases", f"{data[data["Accident_Severity"] == "Fatal"]["Accident_Index"].nunique():,}")
+    # Using Markdown with custom HTML and CSS for wrapping the text
+    st.markdown("""
+        <style>
+            .metric-box {
+                width: 300px;  # Adjust width as needed
+                word-wrap: break-word;
+                word-break: break-word;
+                white-space: normal;
+                padding: 10px;
+                border: 1px solid #ddd;
+                border-radius: 5px;
+            }
+        </style>
+        """, unsafe_allow_html=True)
+
+    # Display the metric inside the custom-styled box
+    st.markdown(f'<div class="metric-box">This is a very long metric {sum(data["Number_of_Casualties"])} title that will wrap properly inside the box</div>', unsafe_allow_html=True)
 
 def design_dashboard(data):
 

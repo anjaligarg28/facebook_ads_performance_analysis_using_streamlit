@@ -21,6 +21,16 @@ st.markdown(
         min-width: 0px;  /* Adjust the minimum width */
         max-width: 280px;  /* Adjust the maximum width */
     }
+    .main {
+        background-color: #161718; /* Set the background color to gray */
+        color: white; /* Set the text color to white for better contrast */
+    }
+    .reportview-container {
+        padding-top: 0 !important;
+    }
+    .element-container {
+        padding-top: 0 !important;
+    }
     </style>
     """,
     unsafe_allow_html=True,

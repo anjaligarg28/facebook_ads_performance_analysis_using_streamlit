@@ -9,6 +9,7 @@ def preprocess(data: pd.DataFrame):
 
     # drop duplicates if any
     data = data.drop_duplicates()
+    data["Number_of_Accidents"] = 1
 
     # correcting auto traffic sigl to auto traffic signal in junction control column
     data.loc[:, "Junction_Control"] = data["Junction_Control"].str.replace("Auto traffic sigl", "Auto traffic signal")
@@ -30,4 +31,19 @@ def preprocess(data: pd.DataFrame):
     #  'Darkness - lights unlit' 'Darkness - no lighting']
 
     # Vehicle_Type
+    return data
+
+def group_and_aggregate(data: pd.DataFrame, group_on: list, aggregate_on: dict)  -> pd.DataFrame:
+    """
+    Performs grouping on dataframe and returns aggregated spend,impressions, clicks, results, reach,
+    page engagement, thruplays, video plays at 25%, 50%, 75% and 90%.
+    Args:
+        data (pd.DataFrame): data you want to perform grouping on
+        group_on (list): columns you want to group ex. ["campaign","date"]
+        aggregate_on (dict): type of other columns ex. {"cost":"sum","ctr":"avg","objective":"first"}
+
+    Returns:
+        pd.DataFrame: the grouped data
+    """
+    data = data.groupby(group_on).agg(aggregate_on).reset_index()
     return data

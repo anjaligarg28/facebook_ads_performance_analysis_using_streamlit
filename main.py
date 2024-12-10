@@ -13,6 +13,8 @@ st.set_page_config(
     layout="wide"
 )
 
+st.header("Road Accident Data Analysis")
+
 # Add custom CSS to adjust sidebar width
 st.markdown(
     """

@@ -16,7 +16,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.markdown('<p style="color:deepskyblue; font-size:44px;"><b>Road Accident Data Analysis.</b></p>', unsafe_allow_html=True)
+st.markdown('<p style="color:deepskyblue; font-size:44px;"><b>Road Accident Data Analysis</b></p>', unsafe_allow_html=True)
 # Add custom CSS to adjust sidebar width
 st.markdown(
     """

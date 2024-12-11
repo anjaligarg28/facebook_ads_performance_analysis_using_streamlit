@@ -150,6 +150,8 @@ def create_rolling_average_chart(data, x_column, y_columns, window=7, title="Rol
         xaxis_title=x_column,  # Set the x-axis title
         yaxis_title="Count",  # Set the y-axis title
         height=height,  # Set the height of the chart
+        plot_bgcolor="#222222",
+        paper_bgcolor="#222222",
     )
     st.plotly_chart(fig)
 
@@ -271,6 +273,8 @@ def create_side_by_side_barchart(data, category_col, metric1_col: str, metric2_c
         xaxis_title=category_col,
         yaxis_title="Values",
         legend_title="Metrics",
+        plot_bgcolor="#222222",
+        paper_bgcolor="#222222",
     )
 
     # Display the chart in Streamlit
@@ -296,7 +300,7 @@ def plot_day_vs_tod_heatmap(data, colorscale="RdYlGn_r", title = "Number of Acci
             x=[str(col) for col in pivot.columns],  # Force string labels
             y=pivot.index.to_list(), 
             colorscale=colorscale,
-            colorbar=dict(title=f"{title}"),
+            colorbar=dict(showticklabels=False),
             text=pivot.values,
             texttemplate="%{text:.0f}",
             textfont={"size":10}))
@@ -307,7 +311,9 @@ def plot_day_vs_tod_heatmap(data, colorscale="RdYlGn_r", title = "Number of Acci
         title=f'{title} Heatmap',
         xaxis_title='Hour of Day',
         yaxis_title='Day',
-        font=dict(color="black") # Set the font color to black for better visibility
+        font=dict(color="black"), # Set the font color to black for better visibility
+        plot_bgcolor="#222222",
+        paper_bgcolor="#222222",
     )
     st.plotly_chart(fig)
 
@@ -322,7 +328,7 @@ def design_dashboard(data):
     casualties_distributions(copy.deepcopy(data))
     st.write("---")
     st.write(f"## Comparison of Accidents and Casualties Across Different Dimensions")
-    st.write(emoji.emojize(":bulb: Use the sidebar to filter data and explore distributions, such as accidents or casualties under specific road conditions, in fatal cases, or urban areas."))
+    st.markdown(emoji.emojize('<p style="color:deepskyblue; font-size:16px;"><b> 💡 Use the sidebar to filter data and explore distributions, such as accidents or casualties under specific road conditions, in fatal cases, or urban areas.</b></p>'), unsafe_allow_html=True)
     dimensions = {
         "Junction Control": "Junction_Control",
         "Junction Detail": "Junction_Detail",
@@ -343,5 +349,5 @@ def design_dashboard(data):
     # map(copy.deepcopy(data))
     st.write("---")
     st.write("## Number of Accidents Distributed by Hour of the Day for Each Day of the Week")
-    st.write(emoji.emojize(":bulb: Use the sidebar to filter data and find out critical hours requiring more surveillance."))
+    st.markdown(emoji.emojize('<p style="color:deepskyblue; font-size:16px;"><b> 💡 Use the sidebar to filter data and find out critical hours requiring more surveillance.</b></p>'), unsafe_allow_html=True)
     plot_day_vs_tod_heatmap(copy.deepcopy(data))

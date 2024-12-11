@@ -1,11 +1,14 @@
 import pandas as pd
 import os
 import streamlit as st
+import gc
+
+gc.collect()
 
 from utils.dashboard import design_sidebar
 
-st.cache_data.clear()
-st.cache_resource.clear()
+# st.cache_data.clear()
+# st.cache_resource.clear()
 
 st.set_page_config(
     page_title="Road Accident Data Dashboard",
@@ -22,10 +25,6 @@ st.markdown(
     [data-testid="stSidebar"] {
         min-width: 0px;  /* Adjust the minimum width */
         max-width: 280px;  /* Adjust the maximum width */
-    }
-    .main {
-        background-color: #161718; /* Set the background color to gray */
-        color: white; /* Set the text color to white for better contrast */
     }
     .reportview-container {
         padding-top: 0 !important;

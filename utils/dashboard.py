@@ -6,8 +6,6 @@ import emoji
 import plotly.graph_objects as go
 import copy
 
-pio.renderers.default = "browser"
-
 from utils.analyse_and_clean import preprocess, group_and_aggregate
 
 def design_sidebar(data: pd.DataFrame):
@@ -86,7 +84,7 @@ def display_initial_metrics(data):
     with col5.container(border=True):
         st.metric("Fatal Accidents", f"{sum(data[data["Accident_Severity"] == "Fatal"]["Number_of_Accidents"]):,}")
 
-def create_pie_chart(data, names_column, values_column):
+def create_pie_chart(data, names_column, values_column, threshold=2):
     """
     Create a pie chart using Plotly Express in Streamlit.
 
@@ -98,8 +96,31 @@ def create_pie_chart(data, names_column, values_column):
     Returns:
     None: Displays the pie chart in Streamlit.
     """
-    data = group_and_aggregate(data=data, group_on=names_column, aggregate_on={values_column:"sum"})
-    fig = px.pie(data, names=names_column, values=values_column, title=f"{values_column} by {names_column}")
+    data = group_and_aggregate(data=data, group_on=[names_column], aggregate_on={values_column:"sum"})
+    total_value = data[values_column].sum()
+    # Create a new dataframe with "Others" category
+    data["percentage"] = (data[values_column] / total_value) * 100
+    data[names_column] = data.apply(lambda row: row[names_column] if row["percentage"] >= threshold else "Other", axis=1)
+
+    # Group by category to combine small percentages into "Others"
+    data = group_and_aggregate(data = data, group_on = names_column, aggregate_on={values_column:"sum"})
+    fig = px.pie(data, names=names_column, values=values_column, title=f"{values_column.replace("_", " ")} by {names_column.replace("_", " ")}")
+    # Update layout to reduce the size of the pie chart
+    fig.update_layout(
+        width=380,  # Adjust width
+        height=400,  # Adjust height
+        title=dict(font=dict(size=14)),  # Adjust title font size
+        # margin=dict(l=20, r=20, t=40, b=20)  # Reduce margins
+        legend=dict(
+            orientation="h",  # Horizontal orientation
+            yanchor="top",
+            y=-0.2,  # Adjust to position it below the chart
+            xanchor="center",
+            x=0.5,  # Center the legend horizontally
+        ),
+        plot_bgcolor="#222222",
+        paper_bgcolor="#222222",
+    )
     st.plotly_chart(fig)
 
 def create_rolling_average_chart(data, x_column, y_columns, window=7, title="Rolling Average Chart", height=350):
@@ -116,7 +137,7 @@ def create_rolling_average_chart(data, x_column, y_columns, window=7, title="Rol
     Returns:
     None: Displays the rolling average chart in Streamlit.
     """
-    data = group_and_aggregate(data=data, group_on=x_column, aggregate_on=y_columns)
+    data = group_and_aggregate(data=data, group_on=[x_column], aggregate_on=y_columns)
     y_columns = list(y_columns.keys())
     # Calculate rolling averages for the specified columns
     for col in y_columns:
@@ -197,15 +218,18 @@ def map(data):
         st.error("The uploaded file must contain 'Latitude' and 'Longitude' columns.")
 
 def casualties_distributions(data):
-    col2, col3 = st.columns(2)
-    # with col1:
-    #     create_pie_chart(copy.deepcopy(data), "Accident_Severity", "Number_of_Casualties")
+    col1, col2, col3 = st.columns([1.3,1.5,1.5])
+    with col1:
+        create_pie_chart(copy.deepcopy(data), "Accident_Severity", "Number_of_Accidents")
+        create_pie_chart(copy.deepcopy(data), "Urban_or_Rural_Area", "Number_of_Accidents")
     with col2:
-        create_pie_chart(copy.deepcopy(data), "Light_Conditions", "Number_of_Casualties")
+        create_pie_chart(copy.deepcopy(data), "Light_Conditions", "Number_of_Accidents")
+        create_pie_chart(copy.deepcopy(data), "Weather_Conditions", "Number_of_Accidents")
     with col3:
-        create_pie_chart(copy.deepcopy(data), "Road_Surface_Conditions", "Number_of_Casualties")
+        create_pie_chart(copy.deepcopy(data), "Road_Surface_Conditions", "Number_of_Accidents")
+        create_pie_chart(copy.deepcopy(data), "Vehicle_Type", "Number_of_Accidents")
 
-def create_side_by_side_barchart(data, category_col, metric1_col, metric2_col):
+def create_side_by_side_barchart(data, category_col, metric1_col: str, metric2_col):
     """
     Create a side-by-side bar chart using Plotly and Streamlit.
 
@@ -216,9 +240,11 @@ def create_side_by_side_barchart(data, category_col, metric1_col, metric2_col):
         metric2_col (str): Column name for Metric 2.
         chart_title (str): Title for the chart.
     """
-    chart_title = f"{metric1_col} and {metric2_col} by {category_col}"
-    data = group_and_aggregate(data=data, group_on=category_col, aggregate_on={metric1_col:"sum", metric2_col:"sum"})
-
+    chart_title = f"{metric1_col.replace("_", " ")} and {metric2_col.replace("_", " ")} by {category_col.replace("_", " ")}"
+    data[category_col] = data[category_col].astype(str)
+    data = group_and_aggregate(data=data, group_on=[category_col], aggregate_on={metric1_col:"sum", metric2_col:"sum"})
+    data.fillna(0, inplace=True)
+    data.sort_values(by=metric2_col, inplace=True)
     # Create Plotly Figure
     fig = go.Figure()
 
@@ -250,12 +276,72 @@ def create_side_by_side_barchart(data, category_col, metric1_col, metric2_col):
     # Display the chart in Streamlit
     st.plotly_chart(fig, use_container_width=True)
 
+def plot_day_vs_tod_heatmap(data, colorscale="RdYlGn_r", title = "Number of Accidents across Hour of the Day for Each Day of the Week"):
+    data = group_and_aggregate(data, ["Day_of_Week", "Interval"], aggregate_on={"Number_of_Accidents":"sum"})
+    # Define the correct order for days of the week
+    day_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+    # Convert the Day_of_Week column to a categorical type
+    data['Day_of_Week'] = pd.Categorical(data['Day_of_Week'], categories=day_order, ordered=True)
+
+    # Sort the data by Day_of_Week
+    data = data.sort_values(by='Day_of_Week')
+    pivot = data.pivot(index="Day_of_Week", columns="Interval", values="Number_of_Accidents")
+
+    pivot.drop("-1 - 00", axis=1, inplace=True, errors="ignore")
+
+    fig = go.Figure(
+        data=go.Heatmap(
+            z=pivot.values, 
+            x=[str(col) for col in pivot.columns],  # Force string labels
+            y=pivot.index.to_list(), 
+            colorscale=colorscale,
+            colorbar=dict(title=f"{title}"),
+            text=pivot.values,
+            texttemplate="%{text:.0f}",
+            textfont={"size":10}))
+
+    fig.update_layout(
+        # width=1200,  # Adjust width
+        # height=500,  # Adjust height
+        title=f'{title} Heatmap',
+        xaxis_title='Hour of Day',
+        yaxis_title='Day',
+        font=dict(color="black") # Set the font color to black for better visibility
+    )
+    st.plotly_chart(fig)
+
 def design_dashboard(data):
 
     display_initial_metrics(copy.deepcopy(data))
     st.write("---")
+    st.write("## Trend Line for Accidents and Casualties Over Time")
     accident_vs_casualties(copy.deepcopy(data))
     st.write("---")
+    st.write("## Distribution of Number of Accidents Over Dimensions")
     casualties_distributions(copy.deepcopy(data))
+    st.write("---")
+    st.write(f"## Comparison of Accidents and Casualties Across Different Dimensions")
+    st.write(emoji.emojize(":bulb: Use the sidebar to filter data and explore distributions, such as accidents or casualties under specific road conditions, in fatal cases, or urban areas."))
+    dimensions = {
+        "Junction Control": "Junction_Control",
+        "Junction Detail": "Junction_Detail",
+        "Accident Severity": "Accident_Severity",
+        "Light Conditions": "Light_Conditions",
+        "Local Authority": "Local_Authority_(District)",
+        "Carriageway Hazards": "Carriageway_Hazards",
+        "Police Force": "Police_Force",
+        "Road Surface Conditions": "Road_Surface_Conditions",
+        "Road Type": "Road_Type",
+        "Speed limit": "Speed_limit",
+        "Area Type": "Urban_or_Rural_Area",
+        "Weather Conditions": "Weather_Conditions",
+        "Vehicle Type": "Vehicle_Type",
+    }
+    dimension = st.selectbox("Select a dimension", options=dimensions.keys())
+    create_side_by_side_barchart(copy.deepcopy(data), dimensions[dimension], "Number_of_Accidents", "Number_of_Casualties")
     # map(copy.deepcopy(data))
-    create_side_by_side_barchart(copy.deepcopy(data), "Road_Surface_Conditions", "Number_of_Accidents", "Number_of_Casualties")
+    st.write("---")
+    st.write("## Number of Accidents Distributed by Hour of the Day for Each Day of the Week")
+    st.write(emoji.emojize(":bulb: Use the sidebar to filter data and find out critical hours requiring more surveillance."))
+    plot_day_vs_tod_heatmap(copy.deepcopy(data))

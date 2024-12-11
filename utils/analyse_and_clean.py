@@ -1,9 +1,26 @@
 import pandas as pd
+import numpy as np
+import streamlit as st
 
 def print_unique_values(data: pd.DataFrame):
     columns = data.columns
     for column in columns:
         print(column, ":", data[column].unique())
+
+def create_time_interval_col(data: pd.DataFrame):
+    # Convert Time column to datetime format
+    data['Time'] = pd.to_datetime(data['Time'], format='%H:%M')
+
+    # Extract the hour
+    data['Hour'] = data['Time'].dt.hour
+    data["Hour"].replace(np.nan, -1, inplace=True)
+    data["Hour"] = data["Hour"].astype(int)
+
+    # Create intervals
+    data['Interval'] = data['Hour'].apply(lambda x: f"{str(x).zfill(2)} - {str(x+1).zfill(2)}")
+    data["Interval"] = data["Interval"].astype(str)
+
+    return data
 
 def preprocess(data: pd.DataFrame):
 
@@ -31,19 +48,10 @@ def preprocess(data: pd.DataFrame):
     #  'Darkness - lights unlit' 'Darkness - no lighting']
 
     # Vehicle_Type
+
+    data = create_time_interval_col(data)
     return data
 
 def group_and_aggregate(data: pd.DataFrame, group_on: list, aggregate_on: dict)  -> pd.DataFrame:
-    """
-    Performs grouping on dataframe and returns aggregated spend,impressions, clicks, results, reach,
-    page engagement, thruplays, video plays at 25%, 50%, 75% and 90%.
-    Args:
-        data (pd.DataFrame): data you want to perform grouping on
-        group_on (list): columns you want to group ex. ["campaign","date"]
-        aggregate_on (dict): type of other columns ex. {"cost":"sum","ctr":"avg","objective":"first"}
-
-    Returns:
-        pd.DataFrame: the grouped data
-    """
     data = data.groupby(group_on).agg(aggregate_on).reset_index()
     return data
